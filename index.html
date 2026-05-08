@@ -35,6 +35,44 @@
             transition: transform 0.3s ease;
         }
         .floating-btn:hover { transform: scale(1.05); }
+
+        /* 相片牆標題 */
+        #live-gallery-header {
+            padding: 15px;
+            text-align: center;
+            background: white;
+            border-bottom: 2px solid #ff8da1;
+        }
+        #live-gallery-header h2 { color: #e66a81; margin: 0; font-size: 1.2rem; }
+
+        /* 相片牆網格 */
+        #photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 8px;
+            padding: 10px;
+            max-height: 40vh; /* Takes up top 40% of screen */
+            overflow-y: auto;
+            background: #fff;
+        }
+        .photo-item {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #eee;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+        /* 上載iframe container */
+        #upload-section {
+            width: 100%;
+            height: 50vh; /* Takes up bottom 50% */
+            border-top: 1px solid #ddd;
+        }
+        #content-frame { width: 100%; height: 100%; border: none; }
+        
     </style>
 </head>
 <body>
@@ -47,14 +85,25 @@
             請準備好您的相片！
         </div>
     </div>
+    
+    <div id="upload-section">
+        <iframe id="content-frame" src=""></iframe>
+    </div>
 
+       <!-- 相片牆標題 -->
+    <div id="live-gallery-header">
+        <h2>✨ 即時最新相片 ✨</h2>
+    </div>
+    <div id="photo-grid">
+        </div>
+    
     <!-- 懸浮按鈕：請記得替換成你的 Google Drive 資料夾連結 -->
     <a href="https://drive.google.com/drive/folders/1IxGIQbMiMGqAAGmTa669rDlspjsZ2Iq4?usp=sharing" 
        target="_blank" 
        class="floating-btn">
         >> 觀看所有相片
     </a>
-
+    
     <!-- 這個 iframe 會載入你的 Google Apps Script 應用程式 -->
     <iframe id="content-frame" src=""></iframe>
 
@@ -62,6 +111,47 @@
         // --- 設定區 ---
         // !!! 極度重要：請將下方引號內的網址，替換成你的 Google Apps Script 網頁應用程式部署網址 !!!
         const appScriptUrl = "https://script.google.com/macros/s/AKfycbxwMIFcxR7hc08esG_LlEILWTnXdrD8q8NlJasAw0K1idV06O9UZLrs7SfYT4Wkk6NokA/exec";
+
+        // --- 相片牆更新功能 ---
+        async function checkUpdate() {
+            try {
+                // Step 1: Check version
+                const vRes = await fetch(`${appScriptUrl}?checkVersion=true`);
+                const latestVersion = await vRes.text();
+
+                // Step 2: If different, get new photo URLs
+                if (latestVersion !== currentVersion) {
+                    currentVersion = latestVersion;
+                    const pRes = await fetch(`${appScriptUrl}?getPhotos=true`);
+                    const photos = await pRes.json();
+                    renderGallery(photos);
+                }
+            } catch (e) {
+                console.log("Sync error:", e);
+            }
+        }
+
+        // --- 相片牆讀取 ---
+        function renderGallery(photos) {
+            const grid = document.getElementById('photo-grid');
+            // Create a temporary container to avoid flickering
+            const fragment = document.createDocumentFragment();
+            
+            photos.forEach(url => {
+                const img = document.createElement('img');
+                img.src = url;
+                img.className = 'photo-item';
+                img.loading = 'lazy';
+                fragment.appendChild(img);
+            });
+
+            grid.innerHTML = ''; 
+            grid.appendChild(fragment);
+        }
+
+        // 每30秒check update 同步
+        setInterval(checkUpdate, 30000);
+        checkUpdate(); // Run once immediately
         
         // --- 邏輯區 (無需修改) ---
         const iframe = document.getElementById('content-frame');
