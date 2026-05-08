@@ -68,43 +68,30 @@
         let fetchCount = 0;
         let taps = 0;
 
-        // 5-Tap Tracker on Header
-        document.getElementById('live-gallery-header').addEventListener('click', () => {
-        taps++;
+        // --- 5-Tap Hidden Tracker ---
+        document.getElementById('main-header').addEventListener('click', () => {
+            taps++;
             if (taps === 5) {
-            alert(`連線統計:\n總讀取次數: ${fetchCount}\n(每次更新僅消耗 1-2 次讀取)`);
-            taps = 0;
+                alert(`Debug Info:\nTotal Fetches: ${fetchCount}\nStatus: Active`);
+                taps = 0;
             }
-            setTimeout(() => taps = 0, 2000);
+            setTimeout(() => { taps = 0; }, 2000);
         });
+        // --- Loading Handler ---
+        iframe.src = appScriptUrl;
+        iframe.onload = () => {
+            loadingScreen.style.opacity = '0';
+            setTimeout(() => { loadingScreen.style.display = 'none'; }, 800);
+        };
 
-        function renderPhotos(photos) {
-        const grid = document.getElementById('photo-grid');
-        grid.innerHTML = photos.map(url => 
-            `<img src="${url}" style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px;">`
-        ).join('');
-        }
-
-        async function syncGallery() {
+        // --- Version Heartbeat (Optional but keeps tracker accurate) ---
+        async function heartbeat() {
             try {
-                fetchCount++; // 1st Fetch: Check if version changed
-                const vRes = await fetch(`${appScriptUrl}?checkVersion=true`);
-                const vText = await vRes.text();
-    
-                if (vText !== currentVersion) {
-                    fetchCount++; // 2nd Fetch: Get the WHOLE list of 20 IDs at once
-                    const pRes = await fetch(`${appScriptUrl}?getPhotos=true`);
-                    const photos = await pRes.json();
-                
-                    renderPhotos(photos); // Your function to show images
-                    currentVersion = vText;
-                }
-            } catch (e) { console.log("Offline or Error"); }
+                fetchCount++;
+                await fetch(`${appScriptUrl}?checkVersion=true`);
+            } catch(e) {}
         }
-
-        setInterval(syncGallery, 30000); // Check every 30s
-        syncGallery();
-
+        setInterval(heartbeat, 30000);
 
         // 設定 iframe 的來源
         iframe.src = appScriptUrl;
