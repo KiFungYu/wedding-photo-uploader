@@ -59,31 +59,24 @@
         const appScriptUrl = "https://script.google.com/macros/s/AKfycbxwMIFcxR7hc08esG_LlEILWTnXdrD8q8NlJasAw0K1idV06O9UZLrs7SfYT4Wkk6NokA/exec";
         let fetchCount = 0;
         let currentVersion = "0";
-        
-// --- IMPORTANT: The Listener ---
-    window.addEventListener("message", (event) => {
-        // This block runs when verifyAdmin returns true
-        if (event.data === "showDebug") {
-            const stats = `連線統計 (Debug):\n總讀取次數: ${fetchCount}\n\n按下「確定」來重設計數。`;
-            if (confirm(stats)) {
-                fetchCount = 0;
-                alert("計數已重設為 0");
-            }
-        }
-    }, false);
 
-    // --- Tracker Logic ---
-    async function trackStats() {
-        try {
-            fetchCount++; // Increment every 30 seconds
-            const res = await fetch(`${appScriptUrl}?checkVersion=true`);
-            const version = await res.text();
-            currentVersion = version;
-        } catch (e) {
-            console.log("Check failed");
-        }
+        // --- THE LISTENER ---
+  window.addEventListener("message", function(event) {
+    if (event.data === "OPEN_STATS") {
+      var reset = confirm("Total Fetches: " + fetchCount + "\n\nReset count?");
+      if (reset) fetchCount = 0;
     }
-        
+  });
+
+  async function sync() {
+    try {
+      fetchCount++;
+      const res = await fetch(appScriptUrl + "?checkVersion=true");
+      const ver = await res.text();
+      currentVersion = ver;
+    } catch (e) {}
+  }
+
         const iframe = document.getElementById('content-frame');
         iframe.src = appScriptUrl;
         iframe.onload = () => {
@@ -92,8 +85,8 @@
         };
 
         // Every 30 seconds
-        setInterval(trackQuota, 30000);
-        trackQuota();
+        setInterval(sync, 30000);
+        sync();
     </script>
 </body>
 </html>
