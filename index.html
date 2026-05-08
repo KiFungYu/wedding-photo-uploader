@@ -46,10 +46,6 @@
         </div>
     </div>
 
-    <div id="live-gallery-header" style="text-align:center; padding:10px; background:#fff; cursor:pointer;">
-        <h2 style="color:#e66a81; margin:0; font-size:1.2rem;">✨ Ava & Steven 婚禮相簿 ✨</h2>
-    </div>
-
     <a href="https://drive.google.com/drive/folders/1IxGIQbMiMGqAAGmTa669rDlspjsZ2Iq4?usp=sharing" 
        target="_blank" class="floating-btn">>> 觀看所有相片</a>
 
@@ -64,31 +60,6 @@
         let currentVersion = "0";
         let fetchCount = 0;
         let taps = 0;
-
-        // --- 5-Tap Hidden Tracker ---
-        document.getElementById('main-header').addEventListener('click', () => {
-            taps++;
-            if (taps === 5) {
-                alert(`Debug Info:\nTotal Fetches: ${fetchCount}\nStatus: Active`);
-                taps = 0;
-            }
-            setTimeout(() => { taps = 0; }, 2000);
-        });
-        // --- Loading Handler ---
-        iframe.src = appScriptUrl;
-        iframe.onload = () => {
-            loadingScreen.style.opacity = '0';
-            setTimeout(() => { loadingScreen.style.display = 'none'; }, 800);
-        };
-
-        // --- Version Heartbeat (Optional but keeps tracker accurate) ---
-        async function heartbeat() {
-            try {
-                fetchCount++;
-                await fetch(`${appScriptUrl}?checkVersion=true`);
-            } catch(e) {}
-        }
-        setInterval(heartbeat, 30000);
 
         // 設定 iframe 的來源
         iframe.src = appScriptUrl;
