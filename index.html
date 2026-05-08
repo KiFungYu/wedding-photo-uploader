@@ -35,6 +35,16 @@
             transition: transform 0.3s ease;
         }
         .floating-btn:hover { transform: scale(1.05); }
+
+        /* Admin Button Style */
+        .admin-btn {
+            position: fixed; bottom: 10px; left: 10px;
+            background: rgba(255, 255, 255, 0.5);
+            color: #888; font-size: 10px; padding: 5px 10px;
+            border-radius: 5px; text-decoration: none; z-index: 10;
+            border: 1px solid #ddd;
+        }
+        
     </style>
 </head>
 <body>
@@ -67,6 +77,12 @@
         const iframe = document.getElementById('content-frame');
         const loadingScreen = document.getElementById('loading-screen');
 
+        // --- 計數區 ---
+        let fetchCount = 0;
+        let currentVersion = "0";
+        const PASSWORD = "123"; // <--- CHANGE YOUR PASSWORD HERE
+
+
         // 設定 iframe 的來源
         iframe.src = appScriptUrl;
 
@@ -78,6 +94,38 @@
                 loadingScreen.style.display = 'none';
             }, 800); // 這個時間要和 CSS 的 transition 時間一致
         };
+
+        // --- Admin Logic ---
+        function openAdmin() {
+            const input = prompt("請輸入管理員密碼:");
+            if (input === PASSWORD) {
+                const action = confirm(`連線統計:\n總讀取次數: ${fetchCount}\n\n按「確定」重設計數，按「取消」關閉。`);
+                if (action) {
+                    fetchCount = 0;
+                    alert("計數已重設。");
+                }
+            } else if (input !== null) {
+                alert("密碼錯誤！");
+            }
+        }
+
+        // --- Fetch Tracker Logic ---
+        async function syncCheck() {
+            try {
+                fetchCount++; // Increment on every heartbeat check
+                const res = await fetch(`${appScriptUrl}?checkVersion=true`);
+                const version = await res.text();
+                
+                if (version !== currentVersion) {
+                    // Version changed, data will be re-fetched by the iframe inside
+                    currentVersion = version;
+                }
+            } catch (e) { console.log("Check failed"); }
+        }
+
+        setInterval(syncCheck, 30000); // Check every 30 seconds
+        syncCheck();
+        
     </script>
 
 </body>
