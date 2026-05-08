@@ -60,47 +60,16 @@
 
     <script>
         // --- 設定區 ---
+        // !!! 極度重要：請將下方引號內的網址，替換成你的 Google Apps Script 網頁應用程式部署網址 !!!
         const appScriptUrl = "https://script.google.com/macros/s/AKfycbxwMIFcxR7hc08esG_LlEILWTnXdrD8q8NlJasAw0K1idV06O9UZLrs7SfYT4Wkk6NokA/exec";
+        
         // --- 邏輯區 (無需修改) ---
         const iframe = document.getElementById('content-frame');
         const loadingScreen = document.getElementById('loading-screen');
-        // --- Tracker Various ---
-        let currentVersion = "0";
-        let fetchCount = 0;
-        let taps = 0;
 
-        // 5-Tap Tracker on Header
-        document.getElementById('live-gallery-header').addEventListener('click', () => {
-        taps++;
-            if (taps === 5) {
-            alert(`連線統計:\n總讀取次數: ${fetchCount}\n(每次更新僅消耗 1-2 次讀取)`);
-            taps = 0;
-            }
-            setTimeout(() => taps = 0, 2000);
-        });
-
-        async function syncGallery() {
-            try {
-                fetchCount++; // 1st Fetch: Check if version changed
-                const vRes = await fetch(`${appScriptUrl}?checkVersion=true`);
-                const vText = await vRes.text();
-    
-                if (vText !== currentVersion) {
-                    fetchCount++; // 2nd Fetch: Get the WHOLE list of 20 IDs at once
-                    const pRes = await fetch(`${appScriptUrl}?getPhotos=true`);
-                    const photos = await pRes.json();
-                
-                    renderPhotos(photos); // Your function to show images
-                    currentVersion = vText;
-                }
-            } catch (e) { console.log("Offline or Error"); }
-        }
-
-        setInterval(syncGallery, 30000); // Check every 30s
-        syncGallery();
-        
         // 設定 iframe 的來源
         iframe.src = appScriptUrl;
+
         // 當 iframe 載入完成後，隱藏載入畫面
         iframe.onload = function() {
             loadingScreen.style.opacity = '0';
