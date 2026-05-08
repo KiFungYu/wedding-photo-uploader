@@ -39,27 +39,21 @@
         /* The Iframe */
         iframe { width: 100%; height: 100%; border: none; display: block; }
         
-/* Admin Dashboard (The Button) */
-        .admin-dashboard {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 30px;
-            background: rgba(0, 0, 0, 0.05); /* Very subtle gray bar */
-            z-index: 9999; /* Higher than iframe */
-            display: flex;
-            align-items: center;
-            padding-left: 10px;
+        /* Right Button (Guest View) */
+        .guest-btn {
+            right: 20px;
+            background: linear-gradient(135deg, #ff8da1, #e66a81);
+            color: white;
         }
-        .admin-trigger {
+
+        /* Left Button (Admin Panel) */
+        .admin-btn {
+            left: 20px;
+            background: #ffffff;
             color: #888;
-            font-size: 11px;
-            text-decoration: none;
-            padding: 2px 8px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            background: white;
+            border: 1px solid #ddd;
+            font-size: 10px; /* Smaller text to stay discreet */
+            opacity: 0.6; /* Semi-transparent so it's not distracting */
         }
         
     </style>
@@ -86,57 +80,45 @@
     <iframe id="content-frame" src=""></iframe>
 
     <script>
-        // --- 設定區 ---
-        // !!! 極度重要：請將下方引號內的網址，替換成你的 Google Apps Script 網頁應用程式部署網址 !!!
-        const appScriptUrl = "https://script.google.com/macros/s/AKfycbxwMIFcxR7hc08esG_LlEILWTnXdrD8q8NlJasAw0K1idV06O9UZLrs7SfYT4Wkk6NokA/exec";
-        
-        // --- 邏輯區 (無需修改) ---
-        const iframe = document.getElementById('content-frame');
-        const loadingScreen = document.getElementById('loading-screen');
-
-        // --- 計數區 ---
+const appScriptUrl = "https://script.google.com/macros/s/AKfycbxwMIFcxR7hc08esG_LlEILWTnXdrD8q8NlJasAw0K1idV06O9UZLrs7SfYT4Wkk6NokA/exec";
         let fetchCount = 0;
         let currentVersion = "0";
-        const ADMIN_PASS = "123"; // <--- CHANGE YOUR PASSWORD HERE
+        const PASSWORD = "123"; // <--- 管理員密碼
 
-
-
-
-        function openAdminPanel() {
-            const pw = prompt("Admin Password:");
-            if (pw === ADMIN_PASS) {
-                const msg = `Fetch Stats:\nTotal Checks: ${fetchCount}\n\nClick OK to Reset, Cancel to Close.`;
-                if (confirm(msg)) {
+        function openAdmin() {
+            const input = prompt("管理員密碼:");
+            if (input === PASSWORD) {
+                const stats = `連線統計:\n總讀取次數: ${fetchCount}\n\n按「確定」重設計數，按「取消」關閉。`;
+                if (confirm(stats)) {
                     fetchCount = 0;
-                    alert("Counter reset to 0.");
+                    alert("計數已歸零。");
                 }
-            } else if (pw !== null) {
-                alert("Incorrect password.");
+            } else if (input !== null) {
+                alert("密碼錯誤！");
             }
         }
 
-        async function monitorQuota() {
+        async function trackQuota() {
             try {
                 fetchCount++;
-                const response = await fetch(`${appScriptUrl}?checkVersion=true`);
-                const version = await response.text();
+                const res = await fetch(`${appScriptUrl}?checkVersion=true`);
+                const version = await res.text();
                 currentVersion = version;
             } catch (e) {
-                console.log("Monitoring sync...");
+                console.log("Tracking sync...");
             }
         }
-        
-        // 設定 iframe 的來源
+
+        const iframe = document.getElementById('content-frame');
         iframe.src = appScriptUrl;
-        // 當 iframe 載入完成後，隱藏載入畫面
         iframe.onload = () => {
             document.getElementById('loading-screen').style.opacity = '0';
             setTimeout(() => document.getElementById('loading-screen').style.display='none', 800);
         };
-        
-        setInterval(syncCheck, 30000); // Check every 30 seconds
-        syncCheck();
-        
+
+        // Every 30 seconds
+        setInterval(trackQuota, 30000);
+        trackQuota();
     </script>
 
 </body>
